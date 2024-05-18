@@ -10,6 +10,6 @@ Currently, two official plugins are available:
 # Tugas Minggu 02
 - Buatlah halaman user (PageUser.jsx) di dalam folder users dan tampilkan daftar serta detail user seperti yang kita lakukan pada product page.
 - Link dokumentasi: https://fakestoreapi.com/docs
-- src->page->PageUser.jsx
+- src->page->users->PageUser.jsx
 
 
