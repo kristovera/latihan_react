@@ -10,7 +10,7 @@ import {
   Row,
   Table,
 } from "react-bootstrap";
-import useFormatter from "../../hooks/useFormatter";
+import useFormatter from "../../hooks/useFormat";
 import {
   FaArrowAltCircleRight,
   FaCartPlus,
@@ -19,16 +19,16 @@ import {
 } from "react-icons/fa";
 import WidgetOrderChoice from "../../widgets/orders/WidgetOrderChoice";
 import useValidator from "../../hooks/useValidator";
-//import { orderInit, orderValidationInit } from "../../data/orders";
+import { orderInit, orderValidationInit } from "../../data/orders";
 import Swal from "sweetalert2";
 
-const PageProduct = () => {
+const PageLaundry = () => {
   const formatter = useFormatter();
   const [products, setProducts] = useState([]);
   const [items, setItems] = useState([]);
   const [order, setOrder] = useState(orderInit);
 
-  const orderValidator = useValidator(orderValidationInit);
+ const orderValidator = useValidator(orderValidationInit);
 
   const [limit, setLimit] = useState(2);
   const [search, setSearch] = useState("");
@@ -43,7 +43,7 @@ const PageProduct = () => {
     };
 
     axios
-      .get(`${import.meta.env.VITE_BASE_URL}/products`, config)
+      .get(`${import.meta.env.VITE_BASE_LAUNDRY}/products`, config)
       .then((response) => {
         setProducts(response.data);
       })
@@ -57,8 +57,7 @@ const PageProduct = () => {
     let item = items.find((val) => val.id === value.id);
 
     if (item) {
-      item.qty += 1;
-      item.subtotal = item.qty * item.price;
+      item.jumlah += 1;
       let index = items.findIndex((val) => val.id === value.id);
 
       setItems((values) => {
@@ -67,8 +66,7 @@ const PageProduct = () => {
         return itemsCopy;
       });
     } else {
-      value.qty = 1;
-      value.subtotal = value.qty * Number(value.price);
+      value.jumlah = 1;
       setItems([...items, value]);
     }
   };
@@ -89,7 +87,7 @@ const PageProduct = () => {
     };
 
     axios
-      .post(`${import.meta.env.VITE_BASE_URL}/orders`, payload)
+      .post(`${import.meta.env.VITE_BASE_LAUNDRY}/orders`, payload)
       .then(() => {
         setItems([]);
         setOrder(orderInit);
@@ -108,7 +106,7 @@ const PageProduct = () => {
     let payload = { ...order, status, items };
 
     axios
-      .put(`${import.meta.env.VITE_BASE_URL}/orders/${order.id}/`, payload)
+      .put(`${import.meta.env.VITE_BASE_LAUNDRY}/orders/${order.id}/`, payload)
       .then(() => {
         alert("Sukses!!!");
       })
@@ -119,16 +117,7 @@ const PageProduct = () => {
 
   const calculateTotal = useCallback(() => {
     console.log("ini hitung total");
-    /**
-     * useCallback adalah cara memoisasi (teknik memoisasi) sebagai penyimpanannilai di dalam cache
-     * sehingga tidak perlu di evaluasi ulang.
-     *
-     * useMemo mirip seperti useCallback, hanya saja fungsionalitasnya berbeda.
-     * useMemo mengembambalikan value (cocok untuk perhitungan yang membutuhkan data eksternal)
-     * sedangkan useCallback mengembalikan sebuah function agar tidak dibuat ulang jika dependensinya
-     * tidak berubah. Cocok untuk digunakan dalam menge-set nilai pada state dan tepat digunakan
-     * di dalam useEffect dengan dependensi nama fungsinya sendiri.
-     */
+   
     const subtotals = items.map((value) => value.subtotal);
     let count = 0;
     for (let subtotal of subtotals) {
@@ -207,24 +196,7 @@ const PageProduct = () => {
       <Container className="mt-4">
         <Row className="mb-4">
           <Col className="d-flex justify-content-between">
-            <h4>Simple POS</h4>
-            <div className="d-flex gap-3">
-              <Form.Group>
-                <Form.Select onChange={(e) => setLimit(e.target.value)}>
-                  <option>Open this select limit</option>
-                  <option value="2">2</option>
-                  <option value="5">5</option>
-                  <option value="10">10</option>
-                </Form.Select>
-              </Form.Group>
-              <Form.Group>
-                <Form.Control
-                  value={search}
-                  onChange={onSearch}
-                  placeholder="Pencarian"
-                />
-              </Form.Group>
-            </div>
+            <h4>Transaksi</h4>
           </Col>
         </Row>
         <Row>
@@ -235,18 +207,14 @@ const PageProduct = () => {
                   <Card>
                     <Card.Img
                       variant="top"
-                      src={`${value.image},pizza?random${value.id}`}
+                      src={value.avatar}
                     />
                     <Card.Body>
-                      <Card.Title>{value.title}</Card.Title>
-                      <Card.Text>
-                        <small className="text-muted">
-                          {value.description}
-                        </small>
-                      </Card.Text>
+                      {JSON.stringify(value)}
+                      <Card.Title>{value.name}</Card.Title>
                     </Card.Body>
                     <Card.Footer className="d-flex justify-content-between align-items-end">
-                      <Badge>{formatter.toCurrency(value.price)}</Badge>
+                     
                       <Button onClick={() => onAddItem(value)} size="sm">
                         <FaCartPlus /> Add
                       </Button>
@@ -279,6 +247,22 @@ const PageProduct = () => {
                   </Col>
                   <Col>
                     <Form.Control
+                      value={order.customerAddress}
+                      name="customerAddress"
+                      onChange={onHandlerOrder}
+                      placeholder="Address"
+                      required
+                      maxLength={10}
+                      minLength={3}
+                    />
+                    {!orderValidator.validator.customerAddress.isValid && (
+                      <small className="text-danger">
+                        {orderValidator.validator.customerAddress.message}
+                      </small>
+                    )}
+                  </Col>
+                  <Col>
+                    <Form.Control
                       value={order.customerPhone}
                       name="customerPhone"
                       onChange={onHandlerOrder}
@@ -304,20 +288,17 @@ const PageProduct = () => {
               <Table hover striped>
                 <thead>
                   <tr>
-                    <th>Title</th>
-                    <th>Price</th>
-                    <th>Qty</th>
-                    <th>Subtotal</th>
+                    <th>Nama Items</th>
+                    <th>Jumlah</th>
                     <th></th>
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((value, index) => (
                     <tr key={value.id}>
-                      <td>{value.title}</td>
-                      <td>{formatter.toCurrency(value.price)}</td>
-                      <td>{value.qty}</td>
-                      <td>{formatter.toCurrency(value.subtotal)}</td>
+                      
+                      <td>{value.name}</td>
+                      <td>{value.jumlah}</td>
                       <td>
                         <Button
                           onClick={() => onRemoveItem(index)}
@@ -432,4 +413,4 @@ const PageProduct = () => {
   );
 };
 
-export default PageProduct;
+export default PageLaundry;
